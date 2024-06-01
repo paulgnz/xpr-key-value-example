@@ -2,19 +2,21 @@
  (type $i32_=>_i32 (func (param i32) (result i32)))
  (type $i32_i32_=>_none (func (param i32 i32)))
  (type $i32_i32_=>_i32 (func (param i32 i32) (result i32)))
- (type $i32_i32_i32_=>_i32 (func (param i32 i32 i32) (result i32)))
  (type $i32_i32_i32_=>_none (func (param i32 i32 i32)))
  (type $none_=>_i32 (func (result i32)))
+ (type $i32_i32_i32_=>_i32 (func (param i32 i32 i32) (result i32)))
+ (type $i32_=>_none (func (param i32)))
  (type $i32_i64_=>_none (func (param i32 i64)))
  (type $i32_i32_i32_i32_=>_none (func (param i32 i32 i32 i32)))
  (type $i32_i32_i32_i32_=>_i32 (func (param i32 i32 i32 i32) (result i32)))
  (type $i32_i64_=>_i32 (func (param i32 i64) (result i32)))
  (type $none_=>_none (func))
- (type $i32_=>_none (func (param i32)))
  (type $i64_=>_none (func (param i64)))
  (type $i32_i64_i32_i32_=>_none (func (param i32 i64 i32 i32)))
  (type $i64_i64_i64_=>_none (func (param i64 i64 i64)))
+ (type $i64_=>_i32 (func (param i64) (result i32)))
  (type $i32_i32_i64_i32_=>_i32 (func (param i32 i32 i64 i32) (result i32)))
+ (type $i32_i64_i32_=>_i32 (func (param i32 i64 i32) (result i32)))
  (type $i64_i64_i64_i64_=>_i32 (func (param i64 i64 i64 i64) (result i32)))
  (type $i64_i64_i64_i64_i32_i32_=>_i32 (func (param i64 i64 i64 i64 i32 i32) (result i32)))
  (type $i32_=>_i64 (func (param i32) (result i64)))
@@ -25,6 +27,7 @@
  (import "env" "memcpy" (func $~lib/as-chain/env/memcpy (param i32 i32 i32) (result i32)))
  (import "env" "db_update_i64" (func $~lib/as-chain/env/db_update_i64 (param i32 i64 i32 i32)))
  (import "env" "db_store_i64" (func $~lib/as-chain/env/db_store_i64 (param i64 i64 i64 i64 i32 i32) (result i32)))
+ (import "env" "db_remove_i64" (func $~lib/as-chain/env/db_remove_i64 (param i32)))
  (import "env" "action_data_size" (func $~lib/as-chain/env/action_data_size (result i32)))
  (import "env" "read_action_data" (func $~lib/as-chain/env/read_action_data (param i32 i32) (result i32)))
  (global $~lib/rt/stub/offset (mut i32) (i32.const 0))
@@ -77,6 +80,13 @@
  (data (i32.const 3160) "\01\00\00\00.\00\00\00i\00n\00c\00P\00o\00s\00:\00 \00b\00u\00f\00f\00e\00r\00 \00o\00v\00e\00r\00f\00l\00o\00w")
  (data (i32.const 3228) "<")
  (data (i32.const 3240) "\01\00\00\00&\00\00\00n\00o\00 \00s\00e\00c\00o\00n\00d\00a\00r\00y\00 \00v\00a\00l\00u\00e\00!")
+ (data (i32.const 3292) "<")
+ (data (i32.const 3304) "\01\00\00\00,\00\00\00n\00o\00 \00k\00v\00 \00f\00o\00u\00n\00d\00 \00w\00i\00t\00h\00 \00n\00a\00m\00e\00 ")
+ (data (i32.const 3356) "\1c")
+ (data (i32.const 3368) "\1e\00\00\00\0c\00\00\00\f0\0c\00\00\00\00\00\00\90\n")
+ (data (i32.const 3388) "\1c")
+ (data (i32.const 3420) "L")
+ (data (i32.const 3432) "\01\00\00\000\00\00\00p\00r\00i\00m\00a\00r\00y\00 \00v\00a\00l\00u\00e\00 \00n\00o\00t\00 \00f\00o\00u\00n\00d\00!")
  (table $0 3 funcref)
  (elem $0 (i32.const 1) $start:~lib/as-chain/name~anonymous|0 $kv.contract/kv#updatevalues~anonymous|0)
  (export "kv" (global $kv.contract/kv))
@@ -90,6 +100,7 @@
  (export "kv#get:accountkvTableStore" (func $kv.contract/kv#get:accountkvTableStore))
  (export "kv#set:accountkvTableStore" (func $~lib/rt/common/OBJECT#set:rtId))
  (export "kv#updatevalues" (func $kv.contract/kv#updatevalues))
+ (export "kv#removekeys" (func $kv.contract/kv#removekeys))
  (export "apply" (func $kv.contract/apply))
  (export "memory" (memory $0))
  (start $~start)
@@ -733,6 +744,13 @@
  (func $kv.contract/kv#get:accountkvTableStore (param $0 i32) (result i32)
   (i32.load offset=12
    (local.get $0)
+  )
+ )
+ (func $~lib/as-chain/action/requireAuth (param $0 i32)
+  (call $~lib/as-chain/env/require_auth
+   (i64.load
+    (local.get $0)
+   )
   )
  )
  (func $~lib/string/String.UTF8.byteLength (param $0 i32) (param $1 i32) (result i32)
@@ -1623,30 +1641,60 @@
   )
   (block $__inlined_func$~lib/as-chain/serializer/Packer#unpack@virtual
    (block $default
-    (block $case3
-     (block $case2
-      (block $case1
-       (if
-        (i32.ne
-         (local.tee $3
-          (i32.load
-           (i32.sub
-            (local.get $1)
-            (i32.const 8)
+    (block $case4
+     (block $case3
+      (block $case2
+       (block $case1
+        (if
+         (i32.ne
+          (local.tee $3
+           (i32.load
+            (i32.sub
+             (local.get $1)
+             (i32.const 8)
+            )
            )
           )
+          (i32.const 31)
          )
-         (i32.const 30)
-        )
-        (br_table $case3 $default $default $default $case2 $default $default $case1 $default
-         (i32.sub
-          (local.get $3)
-          (i32.const 5)
+         (block
+          (br_if $case1
+           (i32.eq
+            (local.get $3)
+            (i32.const 32)
+           )
+          )
+          (br_if $case2
+           (i32.eq
+            (local.get $3)
+            (i32.const 12)
+           )
+          )
+          (br_if $case3
+           (i32.eq
+            (local.get $3)
+            (i32.const 9)
+           )
+          )
+          (br_if $case4
+           (i32.eq
+            (local.get $3)
+            (i32.const 5)
+           )
+          )
+          (br $default)
          )
         )
+        (local.set $1
+         (call $kv.contract/updatevaluesAction#unpack
+          (local.get $1)
+          (local.get $2)
+         )
+        )
+        (br $__inlined_func$~lib/as-chain/serializer/Packer#unpack@virtual)
        )
        (local.set $1
-        (call $kv.contract/updatevaluesAction#unpack
+        (call $kv.contract/removekeysAction#unpack
          (local.get $1)
          (local.get $2)
         )
@@ -2019,8 +2067,7 @@
    (i32.const 16)
   )
  )
- (func $~lib/array/ensureCapacity (param $0 i32) (param $1 i32)
-  (local $2 i32)
+ (func $~lib/array/ensureCapacity (param $0 i32) (param $1 i32) (param $2 i32)
   (local $3 i32)
   (local $4 i32)
   (if
@@ -2032,16 +2079,32 @@
        (local.get $0)
       )
      )
-     (i32.const 2)
+     (local.get $2)
     )
    )
    (block
     (if
      (i32.gt_u
       (local.get $1)
-      (i32.const 268435455)
+      (i32.shr_u
+       (i32.const 1073741820)
+       (local.get $2)
+      )
      )
      (unreachable)
+    )
+    (local.set $1
+     (i32.shl
+      (select
+       (local.get $1)
+       (i32.const 8)
+       (i32.gt_u
+        (local.get $1)
+        (i32.const 8)
+       )
+      )
+      (local.get $2)
+     )
     )
     (call $~lib/memory/memory.fill
      (i32.add
@@ -2069,19 +2132,7 @@
             )
            )
           )
-          (local.tee $1
-           (i32.shl
-            (select
-             (local.get $1)
-             (i32.const 8)
-             (i32.gt_u
-              (local.get $1)
-              (i32.const 8)
-             )
-            )
-            (i32.const 2)
-           )
-          )
+          (local.get $1)
           (i32.lt_u
            (local.get $1)
            (local.get $2)
@@ -2145,6 +2196,7 @@
        (i32.const 1)
       )
      )
+     (i32.const 2)
     )
     (call $~lib/rt/common/OBJECT#set:rtId
      (local.get $0)
@@ -2281,9 +2333,26 @@
   )
   (local.get $0)
  )
+ (func $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#get (param $0 i32) (param $1 i32) (result i32)
+  (if
+   (i32.eqz
+    (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
+     (local.get $1)
+    )
+   )
+   (return
+    (i32.const 0)
+   )
+  )
+  (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#getEx
+   (local.get $0)
+   (i32.load offset=4
+    (local.get $1)
+   )
+  )
+ )
  (func $~lib/proton-tsc/modules/store/store/TableStore<kv.tables/AccountKV>#get (param $0 i32) (param $1 i64) (result i32)
   (local $2 i32)
-  (local $3 i32)
   (block $__inlined_func$~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#getByKey (result i32)
    (drop
     (br_if $__inlined_func$~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#getByKey
@@ -2304,30 +2373,11 @@
      )
     )
    )
-   (block $__inlined_func$~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#get (result i32)
-    (local.set $3
-     (i32.load
-      (local.get $0)
-     )
+   (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#get
+    (i32.load
+     (local.get $0)
     )
-    (drop
-     (br_if $__inlined_func$~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#get
-      (i32.const 0)
-      (i32.eqz
-       (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
-        (local.tee $0
-         (local.get $2)
-        )
-       )
-      )
-     )
-    )
-    (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#getEx
-     (local.get $3)
-     (i32.load offset=4
-      (local.get $0)
-     )
-    )
+    (local.get $2)
    )
   )
  )
@@ -2494,12 +2544,60 @@
   )
   (i32.const -1)
  )
+ (func $~lib/array/Array<kv.tables/KV>#push (param $0 i32) (param $1 i32)
+  (local $2 i32)
+  (local $3 i32)
+  (call $~lib/array/ensureCapacity
+   (local.get $0)
+   (local.tee $3
+    (i32.add
+     (local.tee $2
+      (i32.load offset=12
+       (local.get $0)
+      )
+     )
+     (i32.const 1)
+    )
+   )
+   (i32.const 2)
+  )
+  (i32.store
+   (i32.add
+    (i32.load offset=4
+     (local.get $0)
+    )
+    (i32.shl
+     (local.get $2)
+     (i32.const 2)
+    )
+   )
+   (local.get $1)
+  )
+  (call $~lib/rt/common/OBJECT#set:rtId
+   (local.get $0)
+   (local.get $3)
+  )
+ )
  (func $kv.tables/AccountKV#getPrimaryValue (param $0 i32) (result i64)
   (i64.load
    (i32.load
     (local.get $0)
    )
   )
+ )
+ (func $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#requireFind (param $0 i32) (param $1 i64) (param $2 i32) (result i32)
+  (call $~lib/as-chain/system/check
+   (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
+    (local.tee $0
+     (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#find
+      (local.get $0)
+      (local.get $1)
+     )
+    )
+   )
+   (local.get $2)
+  )
+  (local.get $0)
  )
  (func $~lib/as-chain/serializer/Encoder#constructor (param $0 i32) (result i32)
   (local $1 i32)
@@ -2606,32 +2704,176 @@
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
+  (local $5 i32)
   (local.set $2
    (local.get $0)
   )
   (block $__inlined_func$~lib/as-chain/serializer/Packer#pack@virtual
    (block $default
-    (block $case3
-     (block $case2
-      (block $case1
-       (if
-        (i32.ne
-         (local.tee $0
+    (block $case4
+     (block $case3
+      (block $case2
+       (block $case1
+        (if
+         (i32.ne
+          (local.tee $0
+           (i32.load
+            (i32.sub
+             (local.get $1)
+             (i32.const 8)
+            )
+           )
+          )
+          (i32.const 31)
+         )
+         (block
+          (br_if $case1
+           (i32.eq
+            (local.get $0)
+            (i32.const 32)
+           )
+          )
+          (br_if $case2
+           (i32.eq
+            (local.get $0)
+            (i32.const 12)
+           )
+          )
+          (br_if $case3
+           (i32.eq
+            (local.get $0)
+            (i32.const 9)
+           )
+          )
+          (br_if $case4
+           (i32.eq
+            (local.get $0)
+            (i32.const 5)
+           )
+          )
+          (br $default)
+         )
+        )
+        (if
+         (i32.eqz
           (i32.load
-           (i32.sub
+           (local.get $1)
+          )
+         )
+         (unreachable)
+        )
+        (if
+         (i32.eqz
+          (local.tee $0
+           (i32.load offset=4
             (local.get $1)
-            (i32.const 8)
            )
           )
          )
-         (i32.const 30)
+         (unreachable)
         )
-        (br_table $case3 $default $default $default $case2 $default $default $case1 $default
-         (i32.sub
-          (local.get $0)
-          (i32.const 5)
+        (local.set $3
+         (i32.add
+          (call $~lib/as-chain/varint/calcPackedVarUint32Length
+           (i32.load offset=12
+            (local.get $0)
+           )
+          )
+          (i32.const 8)
          )
         )
+        (local.set $0
+         (i32.const 0)
+        )
+        (loop $for-loop|0
+         (if
+          (i32.eqz
+           (local.tee $4
+            (i32.load offset=4
+             (local.get $1)
+            )
+           )
+          )
+          (unreachable)
+         )
+         (if
+          (i32.lt_s
+           (local.get $0)
+           (i32.load offset=12
+            (local.get $4)
+           )
+          )
+          (block
+           (if
+            (i32.eqz
+             (local.tee $4
+              (i32.load offset=4
+               (local.get $1)
+              )
+             )
+            )
+            (unreachable)
+           )
+           (local.set $3
+            (i32.add
+             (call $kv.tables/KV#getSize
+              (call $~lib/array/Array<kv.tables/KV>#__get
+               (local.get $4)
+               (local.get $0)
+              )
+             )
+             (local.get $3)
+            )
+           )
+           (local.set $0
+            (i32.add
+             (local.get $0)
+             (i32.const 1)
+            )
+           )
+           (br $for-loop|0)
+          )
+         )
+        )
+        (local.set $0
+         (call $~lib/as-chain/serializer/Encoder#constructor
+          (local.get $3)
+         )
+        )
+        (if
+         (i32.eqz
+          (local.tee $3
+           (i32.load
+            (local.get $1)
+           )
+          )
+         )
+         (unreachable)
+        )
+        (call $~lib/as-chain/serializer/Encoder#pack
+         (local.get $0)
+         (local.get $3)
+        )
+        (if
+         (i32.eqz
+          (local.tee $1
+           (i32.load offset=4
+            (local.get $1)
+           )
+          )
+         )
+         (unreachable)
+        )
+        (call $~lib/as-chain/serializer/Encoder#packObjectArray<kv.tables/KV>
+         (local.get $0)
+         (local.get $1)
+        )
+        (local.set $0
+         (call $~lib/as-chain/serializer/Encoder#getBytes
+          (local.get $0)
+         )
+        )
+        (br $__inlined_func$~lib/as-chain/serializer/Packer#pack@virtual)
        )
        (if
         (i32.eqz
@@ -2664,10 +2906,10 @@
        (local.set $0
         (i32.const 0)
        )
-       (loop $for-loop|0
+       (loop $for-loop|00
         (if
          (i32.eqz
-          (local.tee $4
+          (local.tee $5
            (i32.load offset=4
             (local.get $1)
            )
@@ -2679,13 +2921,13 @@
          (i32.lt_s
           (local.get $0)
           (i32.load offset=12
-           (local.get $4)
+           (local.get $5)
           )
          )
          (block
           (if
            (i32.eqz
-            (local.tee $4
+            (local.tee $5
              (i32.load offset=4
               (local.get $1)
              )
@@ -2695,9 +2937,9 @@
           )
           (local.set $3
            (i32.add
-            (call $kv.tables/KV#getSize
+            (call $~lib/as-chain/utils/Utils.calcPackedStringLength
              (call $~lib/array/Array<kv.tables/KV>#__get
-              (local.get $4)
+              (local.get $5)
               (local.get $0)
              )
             )
@@ -2710,7 +2952,7 @@
             (i32.const 1)
            )
           )
-          (br $for-loop|0)
+          (br $for-loop|00)
          )
         )
        )
@@ -2743,9 +2985,47 @@
         )
         (unreachable)
        )
-       (call $~lib/as-chain/serializer/Encoder#packObjectArray<kv.tables/KV>
+       (drop
+        (i32.load offset=4
+         (local.get $0)
+        )
+       )
+       (call $~lib/as-chain/serializer/Encoder#packLength
         (local.get $0)
-        (local.get $1)
+        (i32.load offset=12
+         (local.get $1)
+        )
+       )
+       (loop $for-loop|01
+        (if
+         (i32.lt_s
+          (local.get $4)
+          (i32.load offset=12
+           (local.get $1)
+          )
+         )
+         (block
+          (call $~lib/as-chain/serializer/Encoder#packString
+           (local.get $0)
+           (call $~lib/array/Array<kv.tables/KV>#__get
+            (local.get $1)
+            (local.get $4)
+           )
+          )
+          (local.set $4
+           (i32.add
+            (local.get $4)
+            (i32.const 1)
+           )
+          )
+          (br $for-loop|01)
+         )
+        )
+       )
+       (drop
+        (i32.load offset=4
+         (local.get $0)
+        )
        )
        (local.set $0
         (call $~lib/as-chain/serializer/Encoder#getBytes
@@ -3036,10 +3316,80 @@
    (local.get $1)
   )
  )
+ (func $kv.tables/AccountKV#getSecondaryValue (result i32)
+  (local $0 i32)
+  (local $1 i32)
+  (call $~lib/as-chain/system/check
+   (i32.const 0)
+   (i32.const 3248)
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.tee $0
+    (call $~lib/rt/stub/__new
+     (i32.const 16)
+     (i32.const 29)
+    )
+   )
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $0)
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo2
+   (local.get $0)
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:rtId
+   (local.get $0)
+   (i32.const 0)
+  )
+  (call $~lib/memory/memory.fill
+   (local.tee $1
+    (call $~lib/rt/stub/__new
+     (i32.const 64)
+     (i32.const 0)
+    )
+   )
+   (i32.const 64)
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.get $0)
+   (local.get $1)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $0)
+   (local.get $1)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo2
+   (local.get $0)
+   (i32.const 64)
+  )
+  (call $~lib/rt/common/OBJECT#set:rtId
+   (local.get $0)
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.tee $1
+    (call $~lib/rt/stub/__new
+     (i32.const 8)
+     (i32.const 28)
+    )
+   )
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $1)
+   (local.get $0)
+  )
+  (local.get $1)
+ )
  (func $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#update (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
-  (local $4 i64)
+  (local $4 i32)
   (local $5 i32)
   (local $6 i64)
+  (local $7 i32)
+  (local $8 i64)
   (call $~lib/as-chain/system/check
    (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
     (local.get $1)
@@ -3048,7 +3398,7 @@
   )
   (call $~lib/as-chain/system/check
    (i64.eq
-    (local.tee $4
+    (local.tee $6
      (call $kv.tables/AccountKV#getPrimaryValue
       (local.get $2)
      )
@@ -3056,40 +3406,42 @@
     (block $__inlined_func$~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#get:primary (result i64)
      (call $~lib/as-chain/system/check
       (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
-       (local.get $1)
+       (local.tee $4
+        (local.get $1)
+       )
       )
       (i32.const 2832)
      )
      (if
       (i32.load8_u offset=8
-       (local.get $1)
+       (local.get $4)
       )
       (br $__inlined_func$~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#get:primary
        (i64.load offset=16
-        (local.get $1)
+        (local.get $4)
        )
       )
      )
      (if
       (i32.eqz
-       (local.tee $5
+       (local.tee $7
         (block $__inlined_func$~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#getValue (result i32)
          (drop
           (br_if $__inlined_func$~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#getValue
            (i32.const 0)
            (i32.eqz
             (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
-             (local.get $1)
+             (local.get $4)
             )
            )
           )
          )
          (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#getEx
           (i32.load
-           (local.get $1)
+           (local.get $4)
           )
           (i32.load offset=4
-           (local.get $1)
+           (local.get $4)
           )
          )
         )
@@ -3098,17 +3450,17 @@
       (unreachable)
      )
      (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#set:table
-      (local.get $1)
+      (local.get $4)
       (call $kv.tables/AccountKV#getPrimaryValue
-       (local.get $5)
+       (local.get $7)
       )
      )
      (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#set:validPrimary
-      (local.get $1)
+      (local.get $4)
       (i32.const 1)
      )
      (i64.load offset=16
-      (local.get $1)
+      (local.get $4)
      )
     )
    )
@@ -3119,12 +3471,12 @@
     (local.get $0)
    )
   )
-  (local.set $6
+  (local.set $8
    (i64.load
     (local.get $3)
    )
   )
-  (local.set $3
+  (local.set $4
    (i32.load offset=12
     (local.tee $2
      (call $kv.tables/AccountKV#pack
@@ -3137,41 +3489,108 @@
    (i32.load offset=4
     (local.get $1)
    )
-   (local.get $6)
+   (local.get $8)
    (i32.load offset=4
     (local.get $2)
    )
-   (local.get $3)
+   (local.get $4)
   )
-  (if
-   (i32.gt_s
-    (i32.load offset=12
-     (i32.load offset=4
-      (local.get $0)
+  (loop $for-loop|0
+   (if
+    (i32.lt_s
+     (local.get $5)
+     (i32.load offset=12
+      (i32.load offset=4
+       (local.get $0)
+      )
      )
     )
-    (i32.const 0)
-   )
-   (block
-    (drop
-     (i32.load
-      (i32.sub
+    (block
+     (local.set $1
+      (call $~lib/as-chain/idxdb/IDXDB#findPrimaryEx@virtual
        (call $~lib/array/Array<kv.tables/KV>#__get
         (i32.load offset=4
          (local.get $0)
         )
-        (i32.const 0)
+        (local.get $5)
        )
-       (i32.const 8)
       )
      )
+     (local.set $2
+      (call $kv.tables/AccountKV#getSecondaryValue)
+     )
+     (if
+      (i32.eqz
+       (if (result i32)
+        (i32.eq
+         (i32.load
+          (i32.load offset=4
+           (local.get $1)
+          )
+         )
+         (i32.load
+          (local.get $2)
+         )
+        )
+        (i32.eq
+         (i32.load offset=4
+          (i32.load offset=4
+           (local.get $1)
+          )
+         )
+         (i32.load offset=4
+          (local.get $2)
+         )
+        )
+        (i32.const 0)
+       )
+      )
+      (block
+       (local.set $0
+        (call $~lib/array/Array<kv.tables/KV>#__get
+         (i32.load offset=4
+          (local.get $0)
+         )
+         (local.get $5)
+        )
+       )
+       (drop
+        (i32.load
+         (local.get $1)
+        )
+       )
+       (drop
+        (call $kv.tables/AccountKV#getSecondaryValue)
+       )
+       (drop
+        (i64.load
+         (local.get $3)
+        )
+       )
+       (drop
+        (i32.load
+         (i32.sub
+          (local.get $0)
+          (i32.const 8)
+         )
+        )
+       )
+       (unreachable)
+      )
+     )
+     (local.set $5
+      (i32.add
+       (local.get $5)
+       (i32.const 1)
+      )
+     )
+     (br $for-loop|0)
     )
-    (unreachable)
    )
   )
   (if
    (i64.ge_u
-    (local.get $4)
+    (local.get $6)
     (i64.load offset=8
      (local.get $0)
     )
@@ -3181,212 +3600,58 @@
     (select
      (i64.const -2)
      (i64.add
-      (local.get $4)
+      (local.get $6)
       (i64.const 1)
      )
      (i64.ge_u
-      (local.get $4)
+      (local.get $6)
       (i64.const -2)
      )
     )
    )
   )
  )
- (func $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#store (param $0 i32) (param $1 i32) (param $2 i32)
-  (local $3 i32)
-  (local $4 i64)
-  (local $5 i64)
-  (local $6 i32)
-  (local $7 i32)
+ (func $~lib/proton-tsc/modules/store/store/TableStore<kv.tables/AccountKV>#update (param $0 i32) (param $1 i32) (param $2 i32)
+  (local $3 i64)
+  (local $4 i32)
   (local.set $3
-   (i32.load
-    (local.get $0)
-   )
-  )
-  (local.set $4
    (call $kv.tables/AccountKV#getPrimaryValue
     (local.get $1)
    )
   )
-  (local.set $5
-   (i64.load
-    (local.get $2)
-   )
-  )
-  (local.set $7
-   (i32.load offset=12
-    (local.tee $6
-     (call $kv.tables/AccountKV#pack
-      (local.get $1)
-     )
+  (local.set $4
+   (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#requireFind
+    (i32.load
+     (local.get $0)
     )
-   )
-  )
-  (drop
-   (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#constructor
     (local.get $3)
-    (call $~lib/as-chain/env/db_store_i64
-     (i64.load offset=8
-      (local.get $3)
-     )
-     (i64.load offset=16
-      (local.get $3)
-     )
-     (local.get $5)
-     (local.get $4)
-     (i32.load offset=4
-      (local.get $6)
-     )
-     (local.get $7)
-    )
-    (local.get $4)
-    (i32.const 1)
+    (i32.const 1424)
    )
   )
-  (if
-   (i32.gt_s
-    (i32.load offset=12
-     (i32.load offset=4
-      (local.get $0)
-     )
-    )
-    (i32.const 0)
-   )
-   (block
-    (local.set $3
-     (call $~lib/array/Array<kv.tables/KV>#__get
-      (i32.load offset=4
-       (local.get $0)
-      )
-      (i32.const 0)
-     )
-    )
-    (drop
-     (call $kv.tables/AccountKV#getPrimaryValue
-      (local.get $1)
-     )
-    )
-    (call $~lib/as-chain/system/check
-     (i32.const 0)
-     (i32.const 3248)
-    )
-    (call $~lib/rt/common/BLOCK#set:mmInfo
-     (local.tee $0
-      (call $~lib/rt/stub/__new
-       (i32.const 16)
-       (i32.const 29)
-      )
-     )
-     (i32.const 0)
-    )
-    (call $~lib/rt/common/OBJECT#set:gcInfo
-     (local.get $0)
-     (i32.const 0)
-    )
-    (call $~lib/rt/common/OBJECT#set:gcInfo2
-     (local.get $0)
-     (i32.const 0)
-    )
-    (call $~lib/rt/common/OBJECT#set:rtId
-     (local.get $0)
-     (i32.const 0)
-    )
-    (call $~lib/memory/memory.fill
-     (local.tee $1
-      (call $~lib/rt/stub/__new
-       (i32.const 64)
-       (i32.const 0)
-      )
-     )
-     (i32.const 64)
-    )
-    (call $~lib/rt/common/BLOCK#set:mmInfo
-     (local.get $0)
-     (local.get $1)
-    )
-    (call $~lib/rt/common/OBJECT#set:gcInfo
-     (local.get $0)
-     (local.get $1)
-    )
-    (call $~lib/rt/common/OBJECT#set:gcInfo2
-     (local.get $0)
-     (i32.const 64)
-    )
-    (call $~lib/rt/common/OBJECT#set:rtId
-     (local.get $0)
-     (i32.const 0)
-    )
-    (call $~lib/rt/common/BLOCK#set:mmInfo
-     (local.tee $1
-      (call $~lib/rt/stub/__new
-       (i32.const 8)
-       (i32.const 28)
-      )
-     )
-     (i32.const 0)
-    )
-    (call $~lib/rt/common/OBJECT#set:gcInfo
-     (local.get $1)
-     (local.get $0)
-    )
-    (drop
-     (i64.load
-      (local.get $2)
-     )
-    )
-    (drop
-     (i32.load
-      (i32.sub
-       (local.get $3)
-       (i32.const 8)
-      )
-     )
-    )
-    (unreachable)
-   )
-  )
-  (if
-   (i64.ge_u
-    (local.tee $4
-     (call $kv.tables/AccountKV#getPrimaryValue
-      (local.get $1)
-     )
-    )
-    (i64.load offset=8
-     (local.get $0)
-    )
-   )
-   (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#set:scope
+  (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#update
+   (i32.load
     (local.get $0)
-    (select
-     (i64.const -2)
-     (i64.add
-      (local.get $4)
-      (i64.const 1)
-     )
-     (i64.ge_u
-      (local.get $4)
-      (i64.const -2)
-     )
-    )
    )
+   (local.get $4)
+   (local.get $1)
+   (local.get $2)
   )
  )
  (func $kv.contract/kv#updatevalues (param $0 i32) (param $1 i32) (param $2 i32)
   (local $3 i32)
   (local $4 i32)
-  (local $5 i64)
+  (local $5 i32)
   (local $6 i32)
-  (local $7 i32)
-  (local $8 i32)
+  (local $7 i64)
+  (local $8 i64)
   (local $9 i32)
   (local $10 i32)
   (local $11 i32)
   (local $12 i32)
-  (call $~lib/as-chain/env/require_auth
-   (i64.load
-    (local.get $1)
-   )
+  (local $13 i32)
+  (local $14 i64)
+  (call $~lib/as-chain/action/requireAuth
+   (local.get $1)
   )
   (call $~lib/as-chain/system/check
    (i32.gt_s
@@ -3456,11 +3721,11 @@
     )
    )
    (block
-    (local.set $9
+    (local.set $12
      (i32.load offset=4
       (local.tee $11
        (call $~lib/rt/__newArray
-        (local.tee $8
+        (local.tee $10
          (i32.load offset=12
           (local.tee $6
            (i32.load offset=4
@@ -3479,27 +3744,27 @@
     (loop $for-loop|01
      (if
       (i32.lt_s
-       (local.get $4)
+       (local.get $5)
        (select
-        (local.get $8)
-        (local.tee $10
+        (local.get $10)
+        (local.tee $9
          (i32.load offset=12
           (local.get $6)
          )
         )
-        (i32.lt_s
-         (local.get $8)
+        (i32.gt_s
+         (local.get $9)
          (local.get $10)
         )
        )
       )
       (block
-       (local.set $12
+       (local.set $13
         (i32.load
          (i32.add
-          (local.tee $10
+          (local.tee $9
            (i32.shl
-            (local.get $4)
+            (local.get $5)
             (i32.const 2)
            )
           )
@@ -3515,20 +3780,20 @@
        (i32.store
         (i32.add
          (local.get $9)
-         (local.get $10)
+         (local.get $12)
         )
         (call_indirect (type $i32_i32_i32_=>_i32)
-         (local.get $12)
-         (local.get $4)
+         (local.get $13)
+         (local.get $5)
          (local.get $6)
          (i32.load
           (i32.const 2736)
          )
         )
        )
-       (local.set $4
+       (local.set $5
         (i32.add
-         (local.get $4)
+         (local.get $5)
          (i32.const 1)
         )
        )
@@ -3539,7 +3804,7 @@
     (loop $for-loop|1
      (if
       (i32.lt_s
-       (local.get $7)
+       (local.get $4)
        (i32.load offset=12
         (local.get $2)
        )
@@ -3547,59 +3812,26 @@
       (block
        (if
         (i32.eq
-         (local.tee $4
+         (local.tee $5
           (call $~lib/array/Array<~lib/string/String>#indexOf
            (local.get $11)
            (i32.load
             (call $~lib/array/Array<kv.tables/KV>#__get
              (local.get $2)
-             (local.get $7)
+             (local.get $4)
             )
            )
           )
          )
          (i32.const -1)
         )
-        (block
-         (local.set $4
-          (i32.load offset=4
-           (local.get $3)
-          )
+        (call $~lib/array/Array<kv.tables/KV>#push
+         (i32.load offset=4
+          (local.get $3)
          )
-         (local.set $6
-          (call $~lib/array/Array<kv.tables/KV>#__get
-           (local.get $2)
-           (local.get $7)
-          )
-         )
-         (call $~lib/array/ensureCapacity
+         (call $~lib/array/Array<kv.tables/KV>#__get
+          (local.get $2)
           (local.get $4)
-          (local.tee $9
-           (i32.add
-            (local.tee $8
-             (i32.load offset=12
-              (local.get $4)
-             )
-            )
-            (i32.const 1)
-           )
-          )
-         )
-         (i32.store
-          (i32.add
-           (i32.load offset=4
-            (local.get $4)
-           )
-           (i32.shl
-            (local.get $8)
-            (i32.const 2)
-           )
-          )
-          (local.get $6)
-         )
-         (call $~lib/rt/common/OBJECT#set:rtId
-          (local.get $4)
-          (local.get $9)
          )
         )
         (call $~lib/rt/common/OBJECT#set:gcInfo
@@ -3607,19 +3839,19 @@
           (i32.load offset=4
            (local.get $3)
           )
-          (local.get $4)
+          (local.get $5)
          )
          (i32.load offset=4
           (call $~lib/array/Array<kv.tables/KV>#__get
            (local.get $2)
-           (local.get $7)
+           (local.get $4)
           )
          )
         )
        )
-       (local.set $7
+       (local.set $4
         (i32.add
-         (local.get $7)
+         (local.get $4)
          (i32.const 1)
         )
        )
@@ -3646,36 +3878,13 @@
      (local.get $3)
     )
    )
-   (block
-    (local.set $5
-     (call $kv.tables/AccountKV#getPrimaryValue
-      (local.get $3)
-     )
-    )
-    (call $~lib/as-chain/system/check
-     (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
-      (local.tee $2
-       (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#find
-        (i32.load
-         (local.get $0)
-        )
-        (local.get $5)
-       )
-      )
-     )
-     (i32.const 1424)
-    )
-    (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#update
-     (i32.load
-      (local.get $0)
-     )
-     (local.get $2)
-     (local.get $3)
-     (local.get $1)
-    )
+   (call $~lib/proton-tsc/modules/store/store/TableStore<kv.tables/AccountKV>#update
+    (local.get $0)
+    (local.get $3)
+    (local.get $1)
    )
    (block
-    (local.set $5
+    (local.set $8
      (call $kv.tables/AccountKV#getPrimaryValue
       (local.get $3)
      )
@@ -3687,22 +3896,132 @@
         (i32.load
          (local.get $0)
         )
-        (local.get $5)
+        (local.get $8)
        )
       )
      )
      (i32.const 1200)
     )
-    (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#store
+    (local.set $4
      (i32.load
-      (local.get $0)
+      (local.tee $2
+       (i32.load
+        (local.get $0)
+       )
+      )
      )
-     (local.get $3)
-     (local.get $1)
+    )
+    (local.set $7
+     (call $kv.tables/AccountKV#getPrimaryValue
+      (local.get $3)
+     )
+    )
+    (local.set $14
+     (i64.load
+      (local.get $1)
+     )
+    )
+    (local.set $6
+     (i32.load offset=12
+      (local.tee $5
+       (call $kv.tables/AccountKV#pack
+        (local.get $3)
+       )
+      )
+     )
+    )
+    (drop
+     (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#constructor
+      (local.get $4)
+      (call $~lib/as-chain/env/db_store_i64
+       (i64.load offset=8
+        (local.get $4)
+       )
+       (i64.load offset=16
+        (local.get $4)
+       )
+       (local.get $14)
+       (local.get $7)
+       (i32.load offset=4
+        (local.get $5)
+       )
+       (local.get $6)
+      )
+      (local.get $7)
+      (i32.const 1)
+     )
+    )
+    (if
+     (i32.gt_s
+      (i32.load offset=12
+       (i32.load offset=4
+        (local.get $2)
+       )
+      )
+      (i32.const 0)
+     )
+     (block
+      (local.set $0
+       (call $~lib/array/Array<kv.tables/KV>#__get
+        (i32.load offset=4
+         (local.get $2)
+        )
+        (i32.const 0)
+       )
+      )
+      (drop
+       (call $kv.tables/AccountKV#getPrimaryValue
+        (local.get $3)
+       )
+      )
+      (drop
+       (call $kv.tables/AccountKV#getSecondaryValue)
+      )
+      (drop
+       (i64.load
+        (local.get $1)
+       )
+      )
+      (drop
+       (i32.load
+        (i32.sub
+         (local.get $0)
+         (i32.const 8)
+        )
+       )
+      )
+      (unreachable)
+     )
     )
     (if
      (i64.ge_u
-      (local.get $5)
+      (local.tee $7
+       (call $kv.tables/AccountKV#getPrimaryValue
+        (local.get $3)
+       )
+      )
+      (i64.load offset=8
+       (local.get $2)
+      )
+     )
+     (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#set:scope
+      (local.get $2)
+      (select
+       (i64.const -2)
+       (i64.add
+        (local.get $7)
+        (i64.const 1)
+       )
+       (i64.ge_u
+        (local.get $7)
+        (i64.const -2)
+       )
+      )
+     )
+    )
+    (if
+     (i64.ge_u
+      (local.get $8)
       (i64.load offset=8
        (local.get $0)
       )
@@ -3712,11 +4031,11 @@
       (select
        (i64.const -2)
        (i64.add
-        (local.get $5)
+        (local.get $8)
         (i64.const 1)
        )
        (i64.ge_u
-        (local.get $5)
+        (local.get $8)
         (i64.const -2)
        )
       )
@@ -3725,222 +4044,22 @@
    )
   )
  )
- (func $kv.contract/updatevaluesAction#unpack (param $0 i32) (param $1 i32) (result i32)
-  (local $2 i32)
-  (local $3 i32)
-  (local $4 i32)
-  (local $5 i32)
-  (local.set $1
-   (call $~lib/as-chain/serializer/Decoder#constructor
-    (local.get $1)
-   )
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.tee $2
-    (call $~lib/rt/stub/__new
-     (i32.const 8)
-     (i32.const 5)
-    )
-   )
-   (i64.const 0)
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.get $2)
-   (i64.const 0)
-  )
-  (call $~lib/as-chain/serializer/Decoder#unpack
-   (local.get $1)
-   (local.get $2)
-  )
-  (call $~lib/rt/common/BLOCK#set:mmInfo
-   (local.get $0)
-   (local.get $2)
-  )
-  (call $~lib/rt/common/OBJECT#set:gcInfo
-   (local.get $0)
-   (call $~lib/array/Array<kv.tables/KV>#constructor
-    (local.tee $4
-     (call $~lib/as-chain/serializer/Decoder#unpackLength
-      (local.get $1)
-     )
-    )
-   )
-  )
-  (loop $for-loop|0
-   (if
-    (i32.lt_s
-     (local.get $3)
-     (local.get $4)
-    )
-    (block
-     (local.set $2
-      (call $kv.tables/KV#constructor)
-     )
-     (if
-      (i32.eqz
-       (local.tee $5
-        (i32.load offset=4
-         (local.get $0)
-        )
-       )
-      )
-      (unreachable)
-     )
-     (call $~lib/array/Array<kv.tables/KV>#__set
-      (local.get $5)
-      (local.get $3)
-      (local.get $2)
-     )
-     (call $~lib/as-chain/serializer/Decoder#unpack
-      (local.get $1)
-      (local.get $2)
-     )
-     (local.set $3
-      (i32.add
-       (local.get $3)
-       (i32.const 1)
-      )
-     )
-     (br $for-loop|0)
-    )
-   )
-  )
-  (i32.load offset=4
-   (local.get $1)
-  )
- )
- (func $kv.contract/apply (param $0 i64) (param $1 i64) (param $2 i64)
-  (local $3 i32)
-  (local $4 i32)
-  (local $5 i32)
-  (local $6 i32)
-  (call $~lib/as-chain/name/Name#set:N
-   (local.tee $5
-    (call $~lib/rt/stub/__new
-     (i32.const 8)
-     (i32.const 5)
-    )
-   )
-   (i64.const 0)
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.get $5)
-   (local.get $0)
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.tee $3
-    (call $~lib/rt/stub/__new
-     (i32.const 8)
-     (i32.const 5)
-    )
-   )
-   (i64.const 0)
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.get $3)
-   (local.get $1)
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.tee $4
-    (call $~lib/rt/stub/__new
-     (i32.const 8)
-     (i32.const 5)
-    )
-   )
-   (i64.const 0)
-  )
-  (call $~lib/as-chain/name/Name#set:N
-   (local.get $4)
-   (local.get $2)
-  )
-  (local.set $5
-   (call $kv.contract/kv#constructor
-    (i32.const 0)
-    (local.get $5)
-    (local.get $3)
-    (local.get $4)
-   )
-  )
-  (drop
-   (call $~lib/as-chain/env/read_action_data
-    (i32.load offset=4
-     (local.tee $4
-      (call $~lib/array/Array<u8>#constructor
-       (local.tee $3
-        (call $~lib/as-chain/env/action_data_size)
-       )
-      )
-     )
-    )
-    (local.get $3)
-   )
-  )
-  (local.set $6
-   (local.get $4)
-  )
+ (func $~lib/array/Array<u8>#__get (param $0 i32) (param $1 i32) (result i32)
   (if
-   (i64.eq
-    (local.get $0)
+   (i32.ge_u
     (local.get $1)
+    (i32.load offset=12
+     (local.get $0)
+    )
    )
-   (if
-    (i64.eq
-     (local.get $2)
-     (i64.const -3075276112124799616)
+   (unreachable)
+  )
+  (i32.load8_u
+   (i32.add
+    (i32.load offset=4
+     (local.get $0)
     )
-    (block
-     (drop
-      (call $kv.contract/updatevaluesAction#unpack
-       (block (result i32)
-        (call $~lib/rt/common/BLOCK#set:mmInfo
-         (local.tee $3
-          (call $~lib/rt/stub/__new
-           (i32.const 8)
-           (i32.const 30)
-          )
-         )
-         (i32.const 0)
-        )
-        (call $~lib/rt/common/OBJECT#set:gcInfo
-         (local.get $3)
-         (i32.const 0)
-        )
-        (local.tee $4
-         (local.get $3)
-        )
-       )
-       (local.get $6)
-      )
-     )
-     (local.set $3
-      (local.get $5)
-     )
-     (if
-      (i32.eqz
-       (local.tee $5
-        (i32.load
-         (local.get $4)
-        )
-       )
-      )
-      (unreachable)
-     )
-     (if
-      (i32.eqz
-       (local.tee $4
-        (i32.load offset=4
-         (local.get $4)
-        )
-       )
-      )
-      (unreachable)
-     )
-     (call $kv.contract/kv#updatevalues
-      (local.get $3)
-      (local.get $5)
-      (local.get $4)
-     )
-    )
+    (local.get $1)
    )
   )
  )
@@ -4200,6 +4319,690 @@
    )
   )
  )
+ (func $~lib/string/String.UTF8.decode (param $0 i32) (result i32)
+  (call $~lib/string/String.UTF8.decodeUnsafe
+   (local.get $0)
+   (call $~lib/arraybuffer/ArrayBuffer#get:byteLength
+    (local.get $0)
+   )
+  )
+ )
+ (func $~lib/as-chain/name/N2S (param $0 i64) (result i32)
+  (local $1 i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  (local.set $2
+   (call $~lib/array/Array<u8>#constructor
+    (i32.const 13)
+   )
+  )
+  (loop $for-loop|0
+   (if
+    (i32.le_s
+     (local.get $1)
+     (i32.const 12)
+    )
+    (block
+     (local.set $3
+      (i32.sub
+       (i32.const 12)
+       (local.get $1)
+      )
+     )
+     (local.set $4
+      (if (result i32)
+       (local.get $1)
+       (call $~lib/array/Array<u8>#__get
+        (i32.const 1152)
+        (i32.wrap_i64
+         (i64.and
+          (local.get $0)
+          (i64.const 31)
+         )
+        )
+       )
+       (call $~lib/array/Array<u8>#__get
+        (i32.const 1152)
+        (i32.wrap_i64
+         (i64.and
+          (local.get $0)
+          (i64.const 15)
+         )
+        )
+       )
+      )
+     )
+     (if
+      (i32.ge_u
+       (local.get $3)
+       (i32.load offset=12
+        (local.get $2)
+       )
+      )
+      (block
+       (if
+        (i32.lt_s
+         (local.get $3)
+         (i32.const 0)
+        )
+        (unreachable)
+       )
+       (call $~lib/array/ensureCapacity
+        (local.get $2)
+        (local.tee $5
+         (i32.add
+          (local.get $3)
+          (i32.const 1)
+         )
+        )
+        (i32.const 0)
+       )
+       (call $~lib/rt/common/OBJECT#set:rtId
+        (local.get $2)
+        (local.get $5)
+       )
+      )
+     )
+     (i32.store8
+      (i32.add
+       (local.get $3)
+       (i32.load offset=4
+        (local.get $2)
+       )
+      )
+      (local.get $4)
+     )
+     (local.set $0
+      (select
+       (i64.shr_u
+        (local.get $0)
+        (i64.const 5)
+       )
+       (i64.shr_u
+        (local.get $0)
+        (i64.const 4)
+       )
+       (local.get $1)
+      )
+     )
+     (local.set $1
+      (i32.add
+       (local.get $1)
+       (i32.const 1)
+      )
+     )
+     (br $for-loop|0)
+    )
+   )
+  )
+  (local.set $1
+   (i32.sub
+    (i32.load offset=12
+     (local.get $2)
+    )
+    (i32.const 1)
+   )
+  )
+  (loop $for-loop|1
+   (if
+    (i32.ge_s
+     (local.get $1)
+     (i32.const 0)
+    )
+    (if
+     (i32.eq
+      (call $~lib/array/Array<u8>#__get
+       (local.get $2)
+       (local.get $1)
+      )
+      (i32.const 46)
+     )
+     (block
+      (local.set $1
+       (i32.sub
+        (local.get $1)
+        (i32.const 1)
+       )
+      )
+      (br $for-loop|1)
+     )
+    )
+   )
+  )
+  (call $~lib/string/String.UTF8.decode
+   (i32.load
+    (call $~lib/array/Array<u8>#slice
+     (local.get $2)
+     (i32.const 0)
+     (i32.add
+      (local.get $1)
+      (i32.const 1)
+     )
+    )
+   )
+  )
+ )
+ (func $~lib/string/String.__concat (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (block $__inlined_func$~lib/string/String#concat
+   (if
+    (i32.eqz
+     (local.tee $2
+      (i32.add
+       (local.tee $3
+        (i32.shl
+         (call $~lib/string/String#get:length
+          (local.get $0)
+         )
+         (i32.const 1)
+        )
+       )
+       (local.tee $4
+        (i32.shl
+         (call $~lib/string/String#get:length
+          (local.get $1)
+         )
+         (i32.const 1)
+        )
+       )
+      )
+     )
+    )
+    (block
+     (local.set $2
+      (i32.const 2704)
+     )
+     (br $__inlined_func$~lib/string/String#concat)
+    )
+   )
+   (call $~lib/memory/memory.copy
+    (local.tee $2
+     (call $~lib/rt/stub/__new
+      (local.get $2)
+      (i32.const 1)
+     )
+    )
+    (local.get $0)
+    (local.get $3)
+   )
+   (call $~lib/memory/memory.copy
+    (i32.add
+     (local.get $2)
+     (local.get $3)
+    )
+    (local.get $1)
+    (local.get $4)
+   )
+  )
+  (local.get $2)
+ )
+ (func $kv.contract/kv#removekeys (param $0 i32) (param $1 i32) (param $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i64)
+  (local $6 i32)
+  (local $7 i32)
+  (local $8 i32)
+  (local $9 i32)
+  (local $10 i32)
+  (call $~lib/as-chain/action/requireAuth
+   (local.get $1)
+  )
+  (local.set $9
+   (i32.load offset=12
+    (local.get $0)
+   )
+  )
+  (local.set $5
+   (i64.load
+    (local.get $1)
+   )
+  )
+  (i32.store
+   (i32.const 3380)
+   (call $~lib/as-chain/name/N2S
+    (i64.load
+     (local.get $1)
+    )
+   )
+  )
+  (local.set $3
+   (block $__inlined_func$~lib/util/string/joinReferenceArray<~lib/string/String> (result i32)
+    (drop
+     (br_if $__inlined_func$~lib/util/string/joinReferenceArray<~lib/string/String>
+      (i32.const 2704)
+      (i32.lt_s
+       (local.tee $8
+        (i32.sub
+         (i32.shr_u
+          (i32.load
+           (i32.const 3372)
+          )
+          (i32.const 2)
+         )
+         (i32.const 1)
+        )
+       )
+       (i32.const 0)
+      )
+     )
+    )
+    (if
+     (i32.eqz
+      (local.get $8)
+     )
+     (br $__inlined_func$~lib/util/string/joinReferenceArray<~lib/string/String>
+      (if (result i32)
+       (local.tee $3
+        (i32.load
+         (i32.const 3376)
+        )
+       )
+       (local.get $3)
+       (i32.const 2704)
+      )
+     )
+    )
+    (local.set $3
+     (i32.const 2704)
+    )
+    (local.set $10
+     (call $~lib/string/String#get:length
+      (i32.const 2704)
+     )
+    )
+    (loop $for-loop|0
+     (if
+      (i32.lt_s
+       (local.get $6)
+       (local.get $8)
+      )
+      (block
+       (if
+        (local.tee $4
+         (i32.load
+          (i32.add
+           (i32.shl
+            (local.get $6)
+            (i32.const 2)
+           )
+           (i32.const 3376)
+          )
+         )
+        )
+        (local.set $3
+         (call $~lib/string/String.__concat
+          (local.get $3)
+          (local.get $4)
+         )
+        )
+       )
+       (if
+        (local.get $10)
+        (local.set $3
+         (call $~lib/string/String.__concat
+          (local.get $3)
+          (i32.const 2704)
+         )
+        )
+       )
+       (local.set $6
+        (i32.add
+         (local.get $6)
+         (i32.const 1)
+        )
+       )
+       (br $for-loop|0)
+      )
+     )
+    )
+    (if (result i32)
+     (local.tee $4
+      (i32.load
+       (i32.add
+        (i32.shl
+         (local.get $8)
+         (i32.const 2)
+        )
+        (i32.const 3376)
+       )
+      )
+     )
+     (call $~lib/string/String.__concat
+      (local.get $3)
+      (local.get $4)
+     )
+     (local.get $3)
+    )
+   )
+  )
+  (call $~lib/as-chain/system/check
+   (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
+    (local.tee $4
+     (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#find
+      (i32.load
+       (local.get $9)
+      )
+      (local.get $5)
+     )
+    )
+   )
+   (local.get $3)
+  )
+  (if
+   (i32.eqz
+    (local.tee $4
+     (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#get
+      (i32.load
+       (i32.load
+        (local.get $9)
+       )
+      )
+      (local.get $4)
+     )
+    )
+   )
+   (local.set $4
+    (block (result i32)
+     (global.set $~argumentsLength
+      (i32.const 0)
+     )
+     (call $kv.tables/AccountKV#constructor@varargs)
+    )
+   )
+  )
+  (local.set $3
+   (call $~lib/rt/__newArray
+    (i32.const 0)
+    (i32.const 2)
+    (i32.const 13)
+    (i32.const 3408)
+   )
+  )
+  (loop $for-loop|00
+   (if
+    (i32.lt_s
+     (local.get $7)
+     (i32.load offset=12
+      (i32.load offset=4
+       (local.get $4)
+      )
+     )
+    )
+    (block
+     (if
+      (i32.eq
+       (call $~lib/array/Array<~lib/string/String>#indexOf
+        (local.get $2)
+        (i32.load
+         (call $~lib/array/Array<kv.tables/KV>#__get
+          (i32.load offset=4
+           (local.get $4)
+          )
+          (local.get $7)
+         )
+        )
+       )
+       (i32.const -1)
+      )
+      (call $~lib/array/Array<kv.tables/KV>#push
+       (local.get $3)
+       (call $~lib/array/Array<kv.tables/KV>#__get
+        (i32.load offset=4
+         (local.get $4)
+        )
+        (local.get $7)
+       )
+      )
+     )
+     (local.set $7
+      (i32.add
+       (local.get $7)
+       (i32.const 1)
+      )
+     )
+     (br $for-loop|00)
+    )
+   )
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $4)
+   (local.get $3)
+  )
+  (if
+   (i32.gt_s
+    (i32.load offset=12
+     (i32.load offset=4
+      (local.get $4)
+     )
+    )
+    (i32.const 0)
+   )
+   (call $~lib/proton-tsc/modules/store/store/TableStore<kv.tables/AccountKV>#update
+    (i32.load offset=12
+     (local.get $0)
+    )
+    (local.get $4)
+    (local.get $1)
+   )
+   (block
+    (local.set $3
+     (i32.load offset=12
+      (local.get $0)
+     )
+    )
+    (local.set $5
+     (call $kv.tables/AccountKV#getPrimaryValue
+      (local.get $4)
+     )
+    )
+    (drop
+     (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#requireFind
+      (i32.load
+       (local.get $3)
+      )
+      (local.get $5)
+      (i32.const 1648)
+     )
+    )
+    (local.set $4
+     (i32.const 0)
+    )
+    (call $~lib/as-chain/system/check
+     (call $~lib/as-chain/dbi64/PrimaryIterator<kv.tables/AccountKV>#isOk
+      (local.tee $0
+       (call $~lib/as-chain/mi/MultiIndex<kv.tables/AccountKV>#find
+        (local.tee $2
+         (i32.load
+          (local.get $3)
+         )
+        )
+        (local.get $5)
+       )
+      )
+     )
+     (i32.const 3440)
+    )
+    (drop
+     (i32.load
+      (local.get $2)
+     )
+    )
+    (call $~lib/as-chain/env/db_remove_i64
+     (i32.load offset=4
+      (local.get $0)
+     )
+    )
+    (loop $for-loop|01
+     (if
+      (i32.lt_s
+       (local.get $4)
+       (i32.load offset=12
+        (i32.load offset=4
+         (local.get $2)
+        )
+       )
+      )
+      (block
+       (if
+        (i32.ge_s
+         (i32.load
+          (i32.load
+           (local.tee $1
+            (call $~lib/as-chain/idxdb/IDXDB#findPrimaryEx@virtual
+             (call $~lib/array/Array<kv.tables/KV>#__get
+              (i32.load offset=4
+               (local.get $2)
+              )
+              (local.get $4)
+             )
+            )
+           )
+          )
+         )
+         (i32.const 0)
+        )
+        (block
+         (local.set $0
+          (call $~lib/array/Array<kv.tables/KV>#__get
+           (i32.load offset=4
+            (local.get $2)
+           )
+           (local.get $4)
+          )
+         )
+         (drop
+          (i32.load
+           (local.get $1)
+          )
+         )
+         (drop
+          (i32.load
+           (i32.sub
+            (local.get $0)
+            (i32.const 8)
+           )
+          )
+         )
+         (unreachable)
+        )
+       )
+       (local.set $4
+        (i32.add
+         (local.get $4)
+         (i32.const 1)
+        )
+       )
+       (br $for-loop|01)
+      )
+     )
+    )
+    (if
+     (i64.eq
+      (local.get $5)
+      (i64.sub
+       (i64.load offset=8
+        (local.get $3)
+       )
+       (i64.const 1)
+      )
+     )
+     (call $~lib/as-chain/dbi64/DBI64<kv.tables/AccountKV>#set:scope
+      (local.get $3)
+      (i64.const -1)
+     )
+    )
+   )
+  )
+ )
+ (func $kv.contract/updatevaluesAction#unpack (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  (local.set $1
+   (call $~lib/as-chain/serializer/Decoder#constructor
+    (local.get $1)
+   )
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.tee $2
+    (call $~lib/rt/stub/__new
+     (i32.const 8)
+     (i32.const 5)
+    )
+   )
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.get $2)
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/serializer/Decoder#unpack
+   (local.get $1)
+   (local.get $2)
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.get $0)
+   (local.get $2)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $0)
+   (call $~lib/array/Array<kv.tables/KV>#constructor
+    (local.tee $4
+     (call $~lib/as-chain/serializer/Decoder#unpackLength
+      (local.get $1)
+     )
+    )
+   )
+  )
+  (loop $for-loop|0
+   (if
+    (i32.lt_s
+     (local.get $3)
+     (local.get $4)
+    )
+    (block
+     (local.set $2
+      (call $kv.tables/KV#constructor)
+     )
+     (if
+      (i32.eqz
+       (local.tee $5
+        (i32.load offset=4
+         (local.get $0)
+        )
+       )
+      )
+      (unreachable)
+     )
+     (call $~lib/array/Array<kv.tables/KV>#__set
+      (local.get $5)
+      (local.get $3)
+      (local.get $2)
+     )
+     (call $~lib/as-chain/serializer/Decoder#unpack
+      (local.get $1)
+      (local.get $2)
+     )
+     (local.set $3
+      (i32.add
+       (local.get $3)
+       (i32.const 1)
+      )
+     )
+     (br $for-loop|0)
+    )
+   )
+  )
+  (i32.load offset=4
+   (local.get $1)
+  )
+ )
  (func $~lib/as-chain/serializer/Decoder#unpackString (param $0 i32) (result i32)
   (local $1 i32)
   (local $2 i32)
@@ -4228,14 +5031,336 @@
    (local.get $0)
    (local.get $1)
   )
-  (call $~lib/string/String.UTF8.decodeUnsafe
-   (local.tee $0
-    (i32.load
+  (call $~lib/string/String.UTF8.decode
+   (i32.load
+    (local.get $2)
+   )
+  )
+ )
+ (func $kv.contract/removekeysAction#unpack (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  (local $6 i32)
+  (local $7 i32)
+  (local.set $2
+   (call $~lib/as-chain/serializer/Decoder#constructor
+    (local.get $1)
+   )
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.tee $1
+    (call $~lib/rt/stub/__new
+     (i32.const 8)
+     (i32.const 5)
+    )
+   )
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.get $1)
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/serializer/Decoder#unpack
+   (local.get $2)
+   (local.get $1)
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.get $0)
+   (local.get $1)
+  )
+  (local.set $4
+   (local.tee $7
+    (call $~lib/as-chain/serializer/Decoder#unpackLength
      (local.get $2)
     )
    )
-   (call $~lib/arraybuffer/ArrayBuffer#get:byteLength
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.tee $1
+    (call $~lib/rt/stub/__new
+     (i32.const 16)
+     (i32.const 23)
+    )
+   )
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $1)
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo2
+   (local.get $1)
+   (i32.const 0)
+  )
+  (call $~lib/rt/common/OBJECT#set:rtId
+   (local.get $1)
+   (i32.const 0)
+  )
+  (if
+   (i32.gt_u
+    (local.get $4)
+    (i32.const 268435455)
+   )
+   (unreachable)
+  )
+  (call $~lib/memory/memory.fill
+   (local.tee $6
+    (call $~lib/rt/stub/__new
+     (local.tee $5
+      (i32.shl
+       (select
+        (local.get $4)
+        (i32.const 8)
+        (i32.gt_u
+         (local.get $4)
+         (i32.const 8)
+        )
+       )
+       (i32.const 2)
+      )
+     )
+     (i32.const 0)
+    )
+   )
+   (local.get $5)
+  )
+  (call $~lib/rt/common/BLOCK#set:mmInfo
+   (local.get $1)
+   (local.get $6)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $1)
+   (local.get $6)
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo2
+   (local.get $1)
+   (local.get $5)
+  )
+  (call $~lib/rt/common/OBJECT#set:rtId
+   (local.get $1)
+   (local.get $4)
+  )
+  (loop $for-loop|0
+   (if
+    (i32.lt_s
+     (local.get $3)
+     (local.get $7)
+    )
+    (block
+     (call $~lib/array/Array<kv.tables/KV>#__set
+      (local.get $1)
+      (local.get $3)
+      (call $~lib/as-chain/serializer/Decoder#unpackString
+       (local.get $2)
+      )
+     )
+     (local.set $3
+      (i32.add
+       (local.get $3)
+       (i32.const 1)
+      )
+     )
+     (br $for-loop|0)
+    )
+   )
+  )
+  (call $~lib/rt/common/OBJECT#set:gcInfo
+   (local.get $0)
+   (local.get $1)
+  )
+  (i32.load offset=4
+   (local.get $2)
+  )
+ )
+ (func $kv.contract/apply (param $0 i64) (param $1 i64) (param $2 i64)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  (local $6 i32)
+  (call $~lib/as-chain/name/Name#set:N
+   (local.tee $4
+    (call $~lib/rt/stub/__new
+     (i32.const 8)
+     (i32.const 5)
+    )
+   )
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.get $4)
+   (local.get $0)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.tee $6
+    (call $~lib/rt/stub/__new
+     (i32.const 8)
+     (i32.const 5)
+    )
+   )
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.get $6)
+   (local.get $1)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.tee $3
+    (call $~lib/rt/stub/__new
+     (i32.const 8)
+     (i32.const 5)
+    )
+   )
+   (i64.const 0)
+  )
+  (call $~lib/as-chain/name/Name#set:N
+   (local.get $3)
+   (local.get $2)
+  )
+  (local.set $6
+   (call $kv.contract/kv#constructor
+    (i32.const 0)
+    (local.get $4)
+    (local.get $6)
+    (local.get $3)
+   )
+  )
+  (drop
+   (call $~lib/as-chain/env/read_action_data
+    (i32.load offset=4
+     (local.tee $3
+      (call $~lib/array/Array<u8>#constructor
+       (local.tee $4
+        (call $~lib/as-chain/env/action_data_size)
+       )
+      )
+     )
+    )
+    (local.get $4)
+   )
+  )
+  (local.set $5
+   (local.get $3)
+  )
+  (if
+   (i64.eq
     (local.get $0)
+    (local.get $1)
+   )
+   (block
+    (if
+     (i64.eq
+      (local.get $2)
+      (i64.const -3075276112124799616)
+     )
+     (block
+      (drop
+       (call $kv.contract/updatevaluesAction#unpack
+        (block (result i32)
+         (call $~lib/rt/common/BLOCK#set:mmInfo
+          (local.tee $4
+           (call $~lib/rt/stub/__new
+            (i32.const 8)
+            (i32.const 31)
+           )
+          )
+          (i32.const 0)
+         )
+         (call $~lib/rt/common/OBJECT#set:gcInfo
+          (local.get $4)
+          (i32.const 0)
+         )
+         (local.tee $3
+          (local.get $4)
+         )
+        )
+        (local.get $5)
+       )
+      )
+      (if
+       (i32.eqz
+        (local.tee $4
+         (i32.load
+          (local.get $4)
+         )
+        )
+       )
+       (unreachable)
+      )
+      (if
+       (i32.eqz
+        (local.tee $3
+         (i32.load offset=4
+          (local.get $3)
+         )
+        )
+       )
+       (unreachable)
+      )
+      (call $kv.contract/kv#updatevalues
+       (local.get $6)
+       (local.get $4)
+       (local.get $3)
+      )
+     )
+    )
+    (if
+     (i64.eq
+      (local.get $2)
+      (i64.const -4997502818774024192)
+     )
+     (block
+      (drop
+       (call $kv.contract/removekeysAction#unpack
+        (block (result i32)
+         (call $~lib/rt/common/BLOCK#set:mmInfo
+          (local.tee $4
+           (call $~lib/rt/stub/__new
+            (i32.const 8)
+            (i32.const 32)
+           )
+          )
+          (i32.const 0)
+         )
+         (call $~lib/rt/common/OBJECT#set:gcInfo
+          (local.get $4)
+          (i32.const 0)
+         )
+         (local.tee $3
+          (local.get $4)
+         )
+        )
+        (local.get $5)
+       )
+      )
+      (if
+       (i32.eqz
+        (local.tee $4
+         (i32.load
+          (local.get $4)
+         )
+        )
+       )
+       (unreachable)
+      )
+      (if
+       (i32.eqz
+        (local.tee $3
+         (i32.load offset=4
+          (local.get $3)
+         )
+        )
+       )
+       (unreachable)
+      )
+      (call $kv.contract/kv#removekeys
+       (local.get $6)
+       (local.get $4)
+       (local.get $3)
+      )
+     )
+    )
    )
   )
  )
@@ -4285,10 +5410,21 @@
    )
   )
  )
+ (func $~lib/as-chain/idxdb/IDXDB#findPrimaryEx@virtual (param $0 i32) (result i32)
+  (drop
+   (i32.load
+    (i32.sub
+     (local.get $0)
+     (i32.const 8)
+    )
+   )
+  )
+  (unreachable)
+ )
  (func $~start
   (local $0 i32)
   (global.set $~lib/rt/stub/offset
-   (i32.const 3292)
+   (i32.const 3500)
   )
   (call $~lib/as-chain/name/Name#set:N
    (local.tee $0

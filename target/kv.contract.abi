@@ -30,6 +30,20 @@
       ]
     },
     {
+      "name": "removekeys",
+      "base": "",
+      "fields": [
+        {
+          "name": "actor",
+          "type": "name"
+        },
+        {
+          "name": "keys",
+          "type": "string[]"
+        }
+      ]
+    },
+    {
       "name": "updatevalues",
       "base": "",
       "fields": [
@@ -46,6 +60,11 @@
   ],
   "types": [],
   "actions": [
+    {
+      "name": "removekeys",
+      "type": "removekeys",
+      "ricardian_contract": ""
+    },
     {
       "name": "updatevalues",
       "type": "updatevalues",
