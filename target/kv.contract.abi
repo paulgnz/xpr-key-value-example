@@ -1,0 +1,69 @@
+{
+  "version": "eosio::abi/1.2",
+  "structs": [
+    {
+      "name": "AccountKV",
+      "base": "",
+      "fields": [
+        {
+          "name": "account",
+          "type": "name"
+        },
+        {
+          "name": "values",
+          "type": "KV[]"
+        }
+      ]
+    },
+    {
+      "name": "KV",
+      "base": "",
+      "fields": [
+        {
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "updatevalues",
+      "base": "",
+      "fields": [
+        {
+          "name": "actor",
+          "type": "name"
+        },
+        {
+          "name": "values",
+          "type": "KV[]"
+        }
+      ]
+    }
+  ],
+  "types": [],
+  "actions": [
+    {
+      "name": "updatevalues",
+      "type": "updatevalues",
+      "ricardian_contract": ""
+    }
+  ],
+  "tables": [
+    {
+      "name": "kvs",
+      "type": "AccountKV",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    }
+  ],
+  "ricardian_clauses": [],
+  "variants": [],
+  "action_results": [],
+  "abi_extensions": [],
+  "error_messages": []
+}
